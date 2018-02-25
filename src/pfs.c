@@ -1,6 +1,7 @@
 
 #include "bit.h"
 #include "pfs.h"
+#include "str_util.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -86,20 +87,6 @@ static uint32_t pfs_crc_table[] = {
 };
 
 #define pfs_free_if_exists(ptr) do { if ((ptr)) free((ptr)); } while(0)
-
-static uint32_t pfs_hash(const char* key, uint32_t len)
-{
-    uint32_t h = len;
-    uint32_t step = (len >> 5) + 1;
-    uint32_t i;
-    
-    for (i = len; i >= step; i -= step)
-    {
-        h = h ^ ((h << 5) + (h >> 2) + (key[i - 1]));
-    }
-    
-    return h;
-}
 
 static uint32_t pfs_crc(const void* data, uint32_t len)
 {
@@ -322,7 +309,7 @@ static int pfs_open_impl(PFS** outPfs, const uint8_t* data, uint32_t length, int
             continue;
         }
         
-        pfs->hashes[i] = pfs_hash(name, namelen - 1);
+        pfs->hashes[i] = str_hash(name, namelen - 1);
         ent = &pfs->entries[i];
         ent->name = name;
         
@@ -691,7 +678,7 @@ static int pfs_file_index_by_name(PFS* pfs, const char* name)
     if (!pfs || !name)
         return PFS_MISUSE;
     
-    hash = pfs_hash(name, strlen(name));
+    hash = str_hash(name, strlen(name));
     n = pfs->count;
     hashes = pfs->hashes;
     
@@ -742,7 +729,7 @@ static PfsEntry* pfs_get_or_append_entry(PFS* pfs, const char* name)
     }
     
     namelen = strlen(name);
-    pfs->hashes[index] = pfs_hash(name, (uint32_t)namelen);
+    pfs->hashes[index] = str_hash(name, (uint32_t)namelen);
     
     ent = &pfs->entries[index];
     ent->name = (char*)malloc(namelen + 1);

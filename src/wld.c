@@ -1,4 +1,5 @@
 
+#include "str_util.h"
 #include "wld.h"
 #include "wld_types.h"
 #include <stdint.h>
@@ -53,20 +54,6 @@ static void wld_process_string(const void* src, void* dst, uint32_t len)
     }
 }
 
-static uint32_t wld_hash(const char* key, uint32_t len)
-{
-    uint32_t h = len;
-    uint32_t step = (len >> 5) + 1;
-    uint32_t i;
-    
-    for (i = len; i >= step; i -= step)
-    {
-        h = h ^ ((h << 5) + (h >> 2) + (key[i - 1]));
-    }
-    
-    return h;
-}
-
 static int wld_add_frag(WLD* wld, WldFrag* frag, int negstrlen)
 {
     WldNameRef name;
@@ -99,7 +86,7 @@ static int wld_add_frag(WLD* wld, WldFrag* frag, int negstrlen)
             const char* str = wld->strings - nameref;
             
             name.ref = nameref;
-            name.hash = wld_hash(str, strlen(str));
+            name.hash = str_hash(str, strlen(str));
         }
     }
     
@@ -350,7 +337,7 @@ static int wld_index_by_name(WLD* wld, const char* name)
 {
     WldNameRef* nameRefs = wld->nameRefs;
     int n = (int)wld->count;
-    uint32_t hash = wld_hash(name, strlen(name));
+    uint32_t hash = str_hash(name, strlen(name));
     int i;
     
     for (i = 0; i < n; i++)
