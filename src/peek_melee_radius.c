@@ -1,5 +1,6 @@
 
 #include "eqg_types.h"
+#include "mds.h"
 #include "mod.h"
 #include "pfs.h"
 #include "str_util.h"
@@ -109,6 +110,67 @@ static void handle_mod(const char* fname, uint8_t* data, uint32_t length)
     fprintf(stdout, "%c%c%c %.14g\n", toupper(fname[0]), toupper(fname[1]), toupper(fname[2]), radius);
 }
 
+static void handle_mds(const char* fname, uint8_t* data, uint32_t length)
+{
+    MDS mds;
+    MDSModel model;
+    uint32_t i;
+    int rc;
+    float highX = -999999;
+    float highY = -999999;
+    float highZ = -999999;
+    double radius;
+    
+    rc = mds_open(data, length, &mds);
+    if (rc) return;
+    
+    for (i = 0; i < mds.modelCount; i++)
+    {
+        rc = mds_model(&mds, &model, i);
+        if (rc) break;
+        
+        if (mds.version >= 3)
+        {
+            EQGVertexV3* v3 = (EQGVertexV3*)model.vertices;
+            uint32_t i;
+            
+            for (i = 0; i < model.vertexCount; i++)
+            {
+                float x = v3->position.x;
+                float y = v3->position.y;
+                float z = v3->position.z;
+                
+                if (x > highX) highX = x;
+                if (y > highY) highY = y;
+                if (z > highZ) highZ = z;
+                
+                v3++;
+            }
+        }
+        else
+        {
+            EQGVertexV1* v1 = (EQGVertexV1*)model.vertices;
+            uint32_t i;
+            
+            for (i = 0; i < model.vertexCount; i++)
+            {
+                float x = v1->position.x;
+                float y = v1->position.y;
+                float z = v1->position.z;
+                
+                if (x > highX) highX = x;
+                if (y > highY) highY = y;
+                if (z > highZ) highZ = z;
+                
+                v1++;
+            }
+        }
+    }
+    
+    radius = sqrtf(highX * highX + highY * highY + highZ * 0.5 * (highZ * 0.5));
+    fprintf(stdout, "%c%c%c %.14g\n", toupper(fname[0]), toupper(fname[1]), toupper(fname[2]), radius);
+}
+
 void peek_melee_radius(const char* pfspath)
 {
     char buf[256];
@@ -174,6 +236,7 @@ void peek_melee_radius(const char* pfspath)
                 break;
             
             case 3:
+                handle_mds(fname, data, length);
                 break;
             }
             

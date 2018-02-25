@@ -11,7 +11,7 @@ endif
 ##############################################################################
 # Object files
 ##############################################################################
-_OBJECTS= bit dir_posix main mod opt peek_melee_radius pfs str_util wld
+_OBJECTS= bit dir_posix eqg_common main mds mod opt peek_melee_radius pfs str_util wld
 
 OBJECTS= $(patsubst %,build/%.o,$(_OBJECTS))
 

@@ -1,4 +1,5 @@
 
+#include "eqg_common.h"
 #include "eqg_types.h"
 #include "mod.h"
 #include <stdint.h>
@@ -26,27 +27,6 @@ static int mod_check_header(uint8_t* data, uint32_t length, MOD* outHeader)
     return MOD_OK;
 }
 
-static uint32_t mod_skip_materials(uint8_t* data, uint32_t length, MOD* header)
-{
-    uint32_t p = 0;
-    uint32_t i;
-    
-    for (i = 0; i < header->materialCount; i++)
-    {
-        EQGMaterial* mat = (EQGMaterial*)(data + p);
-        
-        p += sizeof(EQGMaterial);
-        
-        if (p > length) return 0xffffffff;
-        
-        p += sizeof(EQGProperty) * mat->propertyCount;
-        
-        if (p > length) return 0xffffffff;
-    }
-    
-    return p;
-}
-
 int mod_open_skip_to_vertices(uint8_t* data, uint32_t length, MOD* header, void** outVertices)
 {
     uint32_t len;
@@ -63,7 +43,7 @@ int mod_open_skip_to_vertices(uint8_t* data, uint32_t length, MOD* header, void*
     length -= len;
     
     /* Skip materials */
-    len = mod_skip_materials(data, length, header);
+    len = eqg_skip_materials(data, length, header->materialCount);
     if (len == 0xffffffff) goto fail_len;
     
     data += len;
