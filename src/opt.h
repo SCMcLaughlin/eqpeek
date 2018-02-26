@@ -7,6 +7,8 @@
 enum OptBit
 {
     OPT_MELEE_RADIUS,
+    OPT_SOURCE_FILE,
+    OPT_SOURCE_ARCHIVE,
     OPT_HELP,
 };
 
@@ -15,7 +17,7 @@ typedef struct {
     int         bit;
 } OptArg;
 
-typedef struct {
+typedef struct Opt {
     uint32_t    flags;
     uint32_t    count;
     OptArg*     args;

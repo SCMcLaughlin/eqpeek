@@ -13,11 +13,13 @@ static void usage()
         "Usage: eqpeek OPTIONS PATH\n"
         "\n"
         "  -m, --melee-radius   List melee radius for all mob models in PATH\n"
+        "      --source-file    Display the source file being peeked\n"
+        "      --source-archive Display the source archive being peeked\n"
         "  -h, --help           Display this dialog\n"
     );
 }
 
-static int for_all_model_pfs(const char* path, void(*func)(const char* path))
+static int for_all_model_pfs(const char* path, Opt* opt, void(*func)(Opt* opt, const char* path))
 {
     if (path_is_dir(path))
     {
@@ -43,7 +45,7 @@ static int for_all_model_pfs(const char* path, void(*func)(const char* path))
             int len = *cur++;
             
             snprintf(buf + offset, sizeof(buf) - offset, "%s", cur);
-            func(buf);
+            func(opt, buf);
             
             cur += len + 1;
         }
@@ -52,7 +54,7 @@ static int for_all_model_pfs(const char* path, void(*func)(const char* path))
     }
     else
     {
-        func(path);
+        func(opt, path);
     }
     
     return EXIT_SUCCESS;
@@ -67,6 +69,8 @@ int main(int argc, const char** argv)
     static const OptHandler optHandlers[] = {
         { "m",              OPT_MELEE_RADIUS    },
         { "melee-radius",   OPT_MELEE_RADIUS    },
+        { "source-archive", OPT_SOURCE_ARCHIVE  },
+        { "source-file",    OPT_SOURCE_FILE     },
         { "h",              OPT_HELP            },
         { "help",           OPT_HELP            },
         { NULL,             0                   }
@@ -93,7 +97,7 @@ int main(int argc, const char** argv)
     
     if (opt_flag(&opt, OPT_MELEE_RADIUS))
     {
-        rc = for_all_model_pfs(path, peek_melee_radius);
+        rc = for_all_model_pfs(path, &opt, peek_melee_radius);
         goto done;
     }
     

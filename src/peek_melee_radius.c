@@ -2,6 +2,7 @@
 #include "eqg_types.h"
 #include "mds.h"
 #include "mod.h"
+#include "opt.h"
 #include "pfs.h"
 #include "str_util.h"
 #include "wld.h"
@@ -12,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void handle_wld(uint8_t* data, uint32_t length)
+static void handle_wld(Opt* opt, const char* pfspath, const char* fname, uint8_t* data, uint32_t length)
 {
     WLD* wld;
     WldFrag** frags;
@@ -49,6 +50,12 @@ static void handle_wld(uint8_t* data, uint32_t length)
             double radius = *((float*)raw);
             const char* name = wld_string_by_frag(wld, frag);
             
+            if (opt_flag(opt, OPT_SOURCE_ARCHIVE))
+                fprintf(stdout, "%s ", pfspath);
+            
+            if (opt_flag(opt, OPT_SOURCE_FILE))
+                fprintf(stdout, "%s ", fname);
+            
             fprintf(stdout, "%c%c%c %.14g\n", name[0], name[1], name[2], radius);
         }
     }
@@ -56,7 +63,7 @@ static void handle_wld(uint8_t* data, uint32_t length)
     wld_close(wld);
 }
 
-static void handle_mod(const char* fname, uint8_t* data, uint32_t length)
+static void handle_mod(Opt* opt, const char* pfspath, const char* fname, uint8_t* data, uint32_t length)
 {
     MOD mod;
     int rc;
@@ -106,11 +113,17 @@ static void handle_mod(const char* fname, uint8_t* data, uint32_t length)
         }
     }
     
+    if (opt_flag(opt, OPT_SOURCE_ARCHIVE))
+        fprintf(stdout, "%s ", pfspath);
+    
+    if (opt_flag(opt, OPT_SOURCE_FILE))
+        fprintf(stdout, "%s ", fname);
+    
     radius = sqrtf(highX * highX + highY * highY + highZ * 0.5 * (highZ * 0.5));
     fprintf(stdout, "%c%c%c %.14g\n", toupper(fname[0]), toupper(fname[1]), toupper(fname[2]), radius);
 }
 
-static void handle_mds(const char* fname, uint8_t* data, uint32_t length)
+static void handle_mds(Opt* opt, const char* pfspath, const char* fname, uint8_t* data, uint32_t length)
 {
     MDS mds;
     MDSModel model;
@@ -167,11 +180,17 @@ static void handle_mds(const char* fname, uint8_t* data, uint32_t length)
         }
     }
     
+    if (opt_flag(opt, OPT_SOURCE_ARCHIVE))
+        fprintf(stdout, "%s ", pfspath);
+    
+    if (opt_flag(opt, OPT_SOURCE_FILE))
+        fprintf(stdout, "%s ", fname);
+    
     radius = sqrtf(highX * highX + highY * highY + highZ * 0.5 * (highZ * 0.5));
     fprintf(stdout, "%c%c%c %.14g\n", toupper(fname[0]), toupper(fname[1]), toupper(fname[2]), radius);
 }
 
-void peek_melee_radius(const char* pfspath)
+void peek_melee_radius(Opt* opt, const char* pfspath)
 {
     char buf[256];
     PFS* pfs;
@@ -228,15 +247,15 @@ void peek_melee_radius(const char* pfspath)
             switch (type)
             {
             case 1:
-                handle_wld(data, length);
+                handle_wld(opt, pfspath, fname, data, length);
                 break;
             
             case 2:
-                handle_mod(fname, data, length);
+                handle_mod(opt, pfspath, fname, data, length);
                 break;
             
             case 3:
-                handle_mds(fname, data, length);
+                handle_mds(opt, pfspath, fname, data, length);
                 break;
             }
             
